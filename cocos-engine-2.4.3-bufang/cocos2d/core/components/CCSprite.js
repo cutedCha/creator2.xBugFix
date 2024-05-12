@@ -435,10 +435,45 @@ var Sprite = cc.Class({
         this.node.off(cc.Node.EventType.SIZE_CHANGED, this.setVertsDirty, this);
         this.node.off(cc.Node.EventType.ANCHOR_CHANGED, this.setVertsDirty, this);
     },
-
+    isDefRender:false,
     _updateMaterial () {
+        //////////////////////////////////////////////////
+
+
+        // let texture = this._spriteFrame && this._spriteFrame.getTexture();
+
+        // // make sure material is belong to self.
+        // let material = this.getMaterial(0);
+        // if (material) {
+        //     if (material.getDefine('USE_TEXTURE') !== undefined) {
+        //         material.define('USE_TEXTURE', true);
+        //     }
+        //     material.setProperty('texture', texture);
+        // }
+
+        // BlendFunc.prototype._updateMaterial.call(this);
+
+        //////////////////////////////////////////////////////////////
+
+        if(this.isDefRender){
+            let texture = this._spriteFrame && this._spriteFrame.getTexture();
+            // make sure material is belong to self.
+            let material = this.getMaterial(0);
+            if (material) {
+                if (material.getDefine('USE_TEXTURE') !== undefined) {
+                    material.define('USE_TEXTURE', true);
+                }
+                material.setProperty('texture', texture);
+            }
+
+            BlendFunc.prototype._updateMaterial.call(this);
+            return
+        }
+        ///////////////////[修复默认没开预乘导致半透明图片黑边问题]//////////////////////////////////////////////
         let texture = this._spriteFrame && this._spriteFrame.getTexture();
-        
+        if (texture) {
+            texture.setPremultiplyAlpha(true)
+        }
         // make sure material is belong to self.
         let material = this.getMaterial(0);
         if (material) {
@@ -447,8 +482,16 @@ var Sprite = cc.Class({
             }
             material.setProperty('texture', texture);
         }
+        material.setBlend(
+            true,
+            //@ts-ignore
+            cc.gfx.BLEND_FUNC_ADD,
+            cc.macro.ONE, this._dstBlendFactor,
+            //@ts-ignore
+            cc.gfx.BLEND_FUNC_ADD,
+            cc.macro.ONE, this._dstBlendFactor
+        );
 
-        BlendFunc.prototype._updateMaterial.call(this);
     },
 
     _applyAtlas: CC_EDITOR && function (spriteFrame) {
